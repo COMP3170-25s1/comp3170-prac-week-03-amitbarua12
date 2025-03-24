@@ -30,6 +30,8 @@ public class Scene {
 	private int colourBuffer;
 
 	private Shader shader;
+	private Matrix4f modelMatrix;
+    private float angle = 0;
 
 	public Scene() {
 
@@ -77,12 +79,28 @@ public class Scene {
 			// @formatter:on
 
 		indexBuffer = GLBuffers.createIndexBuffer(indices);
+		modelMatrix = new Matrix4f();
 
 	}
 
 	public void draw() {
 		
 		shader.enable();
+        // update the model matrix
+        angle += 0.01 ; // increment the angle
+        rotationMatrix(angle, modelMatrix);
+
+        // set the uniform
+        shader.setUniform("u_modelMatrix", modelMatrix);
+
+        // set the attributes
+        shader.setAttribute("a_position", vertexBuffer);
+        shader.setAttribute("a_colour", colourBuffer);
+
+        // draw using index buffer
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
 		// set the attributes
 		shader.setAttribute("a_position", vertexBuffer);
 		shader.setAttribute("a_colour", colourBuffer);
@@ -134,9 +152,21 @@ public class Scene {
 
 	public static Matrix4f rotationMatrix(float angle, Matrix4f dest) {
 
-		// TODO: Your code here
+	    dest.identity();
+	    float cos = (float) Math.cos(angle);
+	    float sin = (float) Math.sin(angle);
 
-		return dest;
+	    //     [ cos -sin 0 0 ]
+	    // R = [ sin  cos 0 0 ]
+	    //     [ 0    0   1 0 ]
+	    //     [ 0    0   0 1 ]
+
+	    dest.m00(cos);
+	    dest.m01(-sin);
+	    dest.m10(sin);
+	    dest.m11(cos);
+
+	    return dest;
 	}
 
 	/**
@@ -151,7 +181,15 @@ public class Scene {
 
 	public static Matrix4f scaleMatrix(float sx, float sy, Matrix4f dest) {
 
-		// TODO: Your code here
+	    dest.identity();
+
+	    //     [ sx 0  0 0 ]
+	    // S = [ 0  sy 0 0 ]
+	    //     [ 0  0  1 0 ]
+	    //     [ 0  0  0 1 ]
+
+	    dest.m00(sx);
+	    dest.m11(sy);
 
 		return dest;
 	}
